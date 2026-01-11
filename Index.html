@@ -4,166 +4,158 @@
   <base target="_top">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
   <style>
-    body { background: #0f172a; color: #f1f5f9; font-size: 0.9rem; padding: 20px; padding-bottom: 100px; font-family: 'Segoe UI', system-ui, sans-serif; }
-    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1200px; margin: 0 auto; }
+    body { background: #0f172a; color: #f1f5f9; font-size: 0.85rem; padding: 15px; padding-bottom: 100px; font-family: 'Segoe UI', sans-serif; }
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1200px; margin: 0 auto; }
     @media (max-width: 850px) { .dashboard-grid { grid-template-columns: 1fr; } }
     
-    .section-title { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .group-header { background: #1e293b; color: #60a5fa; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; margin: 20px 0 10px; border-left: 4px solid #60a5fa; }
+    .section-title { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 5px; display: flex; justify-content: space-between; }
+    .group-header { background: #1e293b; color: #60a5fa; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin: 15px 0 8px; border-left: 3px solid #60a5fa; }
     
-    .card-flujo { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #334155; }
-    .card-fijo { background: #1e293b; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
+    /* TDC Mini */
+    .card-tdc-mini { background: #1e293b; border-radius: 6px; padding: 6px 12px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid; border: 1px solid #334155; }
     
-    .progress { height: 6px; background: #334155; margin-top: 10px; border-radius: 10px; }
-    .bg-success { background: #10b981 !important; }
-    .text-success { color: #10b981 !important; }
-
-    /* Botones Flotantes */
-    .btn-float-container { position: fixed; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; }
-    .btn-float { width: 60px; height: 60px; border-radius: 50%; font-size: 28px; border: none; color: white; box-shadow: 0 6px 20px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: 0.3s; cursor: pointer; }
-    .btn-float:hover { transform: translateY(-3px); }
-    .btn-saldo { background: #10b981; } /* (+) Verde */
-    .btn-gasto { background: #ef4444; } /* (-) Rojo */
-
-    /* Modales */
-    .modal-content { background: #1e293b; border: 1px solid #475569; color: white; border-radius: 16px; }
-    .modal-header, .modal-footer { border-color: #334155; }
-    .form-control, .form-select { background: #0f172a; border: 1px solid #334155; color: white; padding: 12px; border-radius: 8px; }
-    .form-control:focus, .form-select:focus { background: #0f172a; color: white; border-color: #60a5fa; box-shadow: none; }
-    label { font-size: 0.7rem; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; font-weight: 600; }
+    /* Santander y Cards */
+    .card-santander { background: #1e293b; border: 1px solid #3b82f6; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .card-flujo { background: #1e293b; border-radius: 10px; padding: 12px; margin-bottom: 8px; border: 1px solid #334155; }
+    .card-fijo { background: #1e293b; padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
     
+    .progress { height: 5px; background: #334155; margin-top: 8px; }
+    .btn-float-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 1000; }
+    .btn-float { width: 55px; height: 55px; border-radius: 50%; border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 24px; }
     .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 2000; display: flex; justify-content: center; align-items: center; }
+    .text-xs { font-size: 0.65rem; }
   </style>
 </head>
 <body>
-
   <div id="loader" class="loading-overlay"><div class="spinner-border text-info"></div></div>
 
   <div class="container-fluid">
     <div class="text-center mb-4 mt-2">
-      <h2 id="titulo-qna" class="fw-bold text-info">--</h2>
-      <div id="alertas" class="d-flex flex-wrap justify-content-center gap-2"></div>
+      <h3 id="titulo-qna" class="fw-bold text-info mb-0">--</h3>
+      <div class="text-xs text-muted">Sinc: <span id="timestamp">--:--</span></div>
     </div>
 
     <div class="dashboard-grid">
       <div>
-        <div class="section-title"><span>⚖️ Saldos por Prioridad</span></div>
+        <div id="tarjetas-area"></div>
+        <div class="section-title mt-4"><span>⚖️ Disponibilidad (Gastos)</span></div>
         <div id="flujo-area"></div>
       </div>
       <div>
-        <div class="section-title">
-          <span>💸 Pagos Fijos</span>
-          <span id="total-deuda" class="text-danger fw-bold"></span>
-        </div>
+        <div class="section-title"><span>📋 Monitor de Apartados</span> <span id="total-deuda" class="text-danger fw-bold"></span></div>
+        <div id="santander-root"></div>
         <div id="fijos-area"></div>
       </div>
     </div>
   </div>
 
   <div class="btn-float-container">
-    <button class="btn-float btn-saldo" data-bs-toggle="modal" data-bs-target="#modalSaldo">+</button>
-    <button class="btn-float btn-gasto" data-bs-toggle="modal" data-bs-target="#modalGasto">−</button>
+    <button class="btn-float shadow" style="background:#10b981" data-bs-toggle="modal" data-bs-target="#modalSaldo">+</button>
+    <button class="btn-float shadow" style="background:#ef4444" data-bs-toggle="modal" data-bs-target="#modalGasto">−</button>
   </div>
 
   <div class="modal fade" id="modalGasto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">📉 Registrar Gasto</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body">
-          <div class="mb-3"><label>Rubro</label><select id="g-rubro" class="form-select"></select></div>
-          <div class="mb-3"><label>Tarjeta Destinada</label><select id="g-tarjeta" class="form-select"></select></div>
-          <div class="mb-3"><label>Monto ($)</label><input type="number" id="g-monto" class="form-control" step="0.01"></div>
-          <div class="mb-3"><label>Descripción</label><input type="text" id="g-desc" class="form-control"></div>
-        </div>
-        <div class="modal-footer"><button type="button" class="btn btn-danger w-100 py-2 fw-bold" onclick="ejecutarGasto()">Guardar Gasto</button></div>
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h6 class="modal-title">📉 Registrar Gasto</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="text-xs">Rubro</label><select id="g-rubro" class="form-select form-select-sm"></select></div>
+        <div class="mb-2"><label class="text-xs">Tarjeta</label><select id="g-tarjeta" class="form-select form-select-sm"></select></div>
+        <div class="mb-2"><label class="text-xs">Monto ($)</label><input type="number" id="g-monto" class="form-control form-control-sm"></div>
+        <div class="mb-0"><label class="text-xs">Nota</label><input type="text" id="g-desc" class="form-control form-control-sm"></div>
       </div>
-    </div>
+      <div class="modal-footer"><button type="button" class="btn btn-danger btn-sm w-100" onclick="ejecutarGasto(this)">GUARDAR</button></div>
+    </div></div>
   </div>
 
   <div class="modal fade" id="modalSaldo" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title text-success">💰 Actualizar Saldo</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body">
-          <div class="mb-3"><label>Tarjeta (Destino)</label><select id="s-tarjeta" class="form-select" onchange="filtrarCategoriasSaldo()"></select></div>
-          <div class="mb-3"><label>Categoría</label><select id="s-categoria" class="form-select"></select></div>
-          <div class="mb-3"><label>Saldo Actual ($)</label><input type="number" id="s-monto" class="form-control" step="0.01"></div>
-        </div>
-        <div class="modal-footer"><button type="button" class="btn btn-success w-100 py-2 fw-bold" onclick="ejecutarSaldo()">Actualizar Fila</button></div>
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header"><h6 class="modal-title">💰 Actualizar Saldo</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="text-xs">Tarjeta</label><select id="s-tarjeta" class="form-select form-select-sm" onchange="filtrarCats()"></select></div>
+        <div class="mb-2"><label class="text-xs">Categoría</label><select id="s-categoria" class="form-select form-select-sm"></select></div>
+        <div class="mb-0"><label class="text-xs">Monto Actual ($)</label><input type="number" id="s-monto" class="form-control form-control-sm"></div>
       </div>
-    </div>
+      <div class="modal-footer"><button type="button" class="btn btn-success btn-sm w-100" onclick="ejecutarSaldo(this)">ACTUALIZAR</button></div>
+    </div></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     let saldosReales = [];
-
-    window.onload = () => google.script.run.withSuccessHandler(draw).getData();
+    window.onload = () => refreshData();
+    function refreshData() { document.getElementById('loader').style.display = 'flex'; google.script.run.withSuccessHandler(draw).getData(); }
 
     function draw(data) {
+      if(!data || data.error) { alert("Error de datos"); return; }
+      document.getElementById('timestamp').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
       document.getElementById('loader').style.display = 'none';
       document.getElementById('titulo-qna').innerText = data.resumen.qna;
-      document.getElementById('total-deuda').innerText = "Pendiente: $" + data.resumen.debesApartar;
+      document.getElementById('total-deuda').innerText = "Faltante Santander: $" + data.resumen.debesApartar;
       
-      let aHtml = "";
-      data.alertas.forEach(a => aHtml += `<div class="alert alert-${a.tipo} py-1 px-3 m-0" style="font-size:0.7rem; border-radius:20px;">⚠️ ${a.msg}</div>`);
-      document.getElementById('alertas').innerHTML = aHtml;
+      let tHtml = '<div class="section-title"><span>💳 Vencimientos TDC</span></div>';
+      data.tarjetasStatus.forEach(t => {
+        if(t.tocaPagar) {
+          tHtml += `<div class="card-tdc-mini" style="border-left-color: var(--bs-${t.color})">
+            <div><span class="fw-bold">${t.nombre}</span><span class="text-xs text-muted ms-2">Día ${t.vence}</span></div>
+            <div class="fw-bold text-${t.color}">${t.diasFaltan === 0 ? 'HOY' : t.diasFaltan + 'd'}</div>
+          </div>`;
+        }
+      });
+      document.getElementById('tarjetas-area').innerHTML = tHtml;
+
+      const s = data.santander;
+      document.getElementById('santander-root').innerHTML = `
+        <div class="card-santander" style="${s.enviado ? 'opacity:0.5' : ''}">
+          <div><div class="fw-bold text-info">SANTANDER TOTAL</div><div class="text-xs text-muted">Paquete suscripciones</div></div>
+          <button class="btn btn-sm ${s.enviado ? 'btn-success' : 'btn-danger'}" onclick="confirmarSantander(${s.monto})" ${s.enviado ? 'disabled' : ''}>
+            ${s.enviado ? 'ENVIADO ✅' : 'ENVIAR $' + s.monto}
+          </button>
+        </div>`;
 
       document.getElementById('flujo-area').innerHTML = renderizar(data.flujoAgrupados, true);
       document.getElementById('fijos-area').innerHTML = renderizar(data.fijosAgrupados, false);
 
-      // Llenado de Gasto (-)
       llenarSelect('g-rubro', data.config.rubros);
       llenarSelect('g-tarjeta', data.config.tarjetas);
-
-      // Llenado de Saldo (+) con filtrado
       saldosReales = data.config.opcionesSaldos;
-      const tarjetasSaldos = [...new Set(saldosReales.map(s => s.tarjeta))].sort();
-      llenarSelect('s-tarjeta', tarjetasSaldos);
-      filtrarCategoriasSaldo(); 
-    }
-
-    function filtrarCategoriasSaldo() {
-      const tarjetaSel = document.getElementById('s-tarjeta').value;
-      const cats = saldosReales.filter(s => s.tarjeta === tarjetaSel).map(s => s.categoria);
-      llenarSelect('s-categoria', cats);
+      llenarSelect('s-tarjeta', [...new Set(saldosReales.map(x => x.tarjeta))].sort());
+      filtrarCats();
     }
 
     function renderizar(grupos, esFlujo) {
       let html = "";
+      const hoy = new Date().getDate();
       grupos.forEach(grupo => {
         html += `<div class="group-header">${grupo.nombreTarjeta}</div>`;
         grupo.items.forEach(item => {
-          const pagado = item.porcentaje >= 100;
           if(esFlujo) {
-            html += `<div class="card-flujo"><div class="d-flex justify-content-between"><div><small class="text-muted" style="font-size:0.6rem">${item.categoria}</small><br><span class="fw-bold">${item.nombre}</span></div><div class="text-end"><span class="fw-bold ${item.color==='success'?'text-success':''}">$${item.actual}</span><br><small class="text-muted" style="font-size:0.6rem">Meta: $${item.meta}</small></div></div><div class="progress"><div class="progress-bar bg-${item.color}" style="width: ${item.porcentaje}%"></div></div></div>`;
+            let pct = item.meta > 0 ? (item.actual / item.meta) * 100 : 100;
+            let color = pct >= 100 ? 'success' : (pct > 0 ? 'warning' : 'danger');
+            html += `<div class="card-flujo"><div class="d-flex justify-content-between"><div><span class="text-xs text-muted">${item.categoria}</span><br><span class="fw-bold">${item.nombre}</span></div><div class="text-end"><span class="fw-bold ${color==='success'?'text-success':''}">$${item.actual}</span><br><span class="text-xs text-muted">Presupuesto: $${item.meta}</span></div></div><div class="progress"><div class="progress-bar bg-${color}" style="width: ${Math.min(pct,100)}%"></div></div></div>`;
           } else {
-            html += `<div class="card-fijo" style="${pagado?'opacity:0.4':''}"><div><div class="fw-bold" style="font-size:0.85rem">${item.nombre} ${pagado?'✅':''}</div><small class="text-muted" style="font-size:0.65rem">${item.categoria}</small></div><button class="btn btn-sm ${pagado?'btn-success':'btn-outline-info'}" onclick="pagarFijo('${item.nombre}', ${item.meta}, '${item.tarjeta}', '${item.categoria}')" ${pagado?'disabled':''}>$${item.meta}</button></div>`;
+            const dia = item.diaPago;
+            let tocaPagar = (hoy <= 15 && dia >= hoy && dia <= 15) || (hoy > 15 && (dia >= hoy || dia <= 5));
+            html += `<div class="card-fijo" style="${tocaPagar ? 'border-left: 4px solid #f59e0b; background:#1e293b' : ''}">
+              <div><div class="fw-bold">${item.nombre} ${tocaPagar ? '⚠️' : ''}</div><div class="text-xs text-info fw-bold">Guardado: $${item.actual}</div></div>
+              <div class="text-end"><div class="text-xs text-muted">Día ${dia}</div><span class="badge ${tocaPagar?'bg-warning text-dark':'bg-secondary'} text-xs">${tocaPagar?'TOCA PAGAR':'Próximo'}</span></div>
+            </div>`;
           }
         });
       });
       return html;
     }
 
-    function llenarSelect(id, lista) {
-      document.getElementById(id).innerHTML = lista.map(i => `<option value="${i}">${i}</option>`).join('');
-    }
-
-    function ejecutarGasto() {
+    function confirmarSantander(m) { if(confirm(`¿Confirmar envío de $${m}?`)) { google.script.run.withSuccessHandler(()=>refreshData()).registrarPaqueteSantander(m); } }
+    function ejecutarGasto(btn) { 
       const d = { rubro: document.getElementById('g-rubro').value, tarjeta: document.getElementById('g-tarjeta').value, monto: document.getElementById('g-monto').value, descripcion: document.getElementById('g-desc').value };
-      if(!d.monto) return alert("Ingresa monto");
-      google.script.run.withSuccessHandler(() => location.reload()).registrarGasto(d);
+      if(!d.monto) return; btn.disabled=true; google.script.run.withSuccessHandler(()=>{ bootstrap.Modal.getInstance(document.getElementById('modalGasto')).hide(); btn.disabled=false; refreshData(); }).registrarGasto(d); 
     }
-
-    function ejecutarSaldo() {
+    function ejecutarSaldo(btn) {
       const d = { tarjeta: document.getElementById('s-tarjeta').value, categoria: document.getElementById('s-categoria').value, nuevoSaldo: document.getElementById('s-monto').value };
-      if(!d.nuevoSaldo) return alert("Ingresa saldo");
-      google.script.run.withSuccessHandler(res => res === "OK" ? location.reload() : alert(res)).actualizarSaldoDirecto(d);
+      if(!d.nuevoSaldo) return; btn.disabled=true; google.script.run.withSuccessHandler(()=>{ bootstrap.Modal.getInstance(document.getElementById('modalSaldo')).hide(); btn.disabled=false; refreshData(); }).actualizarSaldoDirecto(d);
     }
-
-    function pagarFijo(n, m, t, c) {
-      if (confirm(`¿Pagar ${n}?`)) google.script.run.withSuccessHandler(() => location.reload()).registrarPago(n, m, t, c);
-    }
+    function llenarSelect(id, lista) { document.getElementById(id).innerHTML = lista.map(i => `<option value="${i}">${i}</option>`).join(''); }
+    function filtrarCats() { const t = document.getElementById('s-tarjeta').value; llenarSelect('s-categoria', saldosReales.filter(s => s.tarjeta === t).map(s => s.categoria)); }
   </script>
 </body>
 </html>
