@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <style>
+    body { background: #0f172a; color: #f1f5f9; font-size: 0.9rem; padding: 20px; padding-bottom: 100px; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1200px; margin: 0 auto; }
+    @media (max-width: 850px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    
+    .section-title { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .group-header { background: #1e293b; color: #60a5fa; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; margin: 20px 0 10px; border-left: 4px solid #60a5fa; }
+    
+    .card-flujo { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #334155; }
+    .card-fijo { background: #1e293b; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
+    
+    .progress { height: 6px; background: #334155; margin-top: 10px; border-radius: 10px; }
+    .bg-success { background: #10b981 !important; }
+    .text-success { color: #10b981 !important; }
+
+    /* Botones Flotantes */
+    .btn-float-container { position: fixed; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; }
+    .btn-float { width: 60px; height: 60px; border-radius: 50%; font-size: 28px; border: none; color: white; box-shadow: 0 6px 20px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: 0.3s; cursor: pointer; }
+    .btn-float:hover { transform: translateY(-3px); }
+    .btn-saldo { background: #10b981; } /* (+) Verde */
+    .btn-gasto { background: #ef4444; } /* (-) Rojo */
+
+    /* Modales */
+    .modal-content { background: #1e293b; border: 1px solid #475569; color: white; border-radius: 16px; }
+    .modal-header, .modal-footer { border-color: #334155; }
+    .form-control, .form-select { background: #0f172a; border: 1px solid #334155; color: white; padding: 12px; border-radius: 8px; }
+    .form-control:focus, .form-select:focus { background: #0f172a; color: white; border-color: #60a5fa; box-shadow: none; }
+    label { font-size: 0.7rem; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; font-weight: 600; }
+    
+    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 2000; display: flex; justify-content: center; align-items: center; }
+  </style>
+</head>
+<body>
+
+  <div id="loader" class="loading-overlay"><div class="spinner-border text-info"></div></div>
+
+  <div class="container-fluid">
+    <div class="text-center mb-4 mt-2">
+      <h2 id="titulo-qna" class="fw-bold text-info">--</h2>
+      <div id="alertas" class="d-flex flex-wrap justify-content-center gap-2"></div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div>
+        <div class="section-title"><span>⚖️ Saldos por Prioridad</span></div>
+        <div id="flujo-area"></div>
+      </div>
+      <div>
+        <div class="section-title">
+          <span>💸 Pagos Fijos</span>
+          <span id="total-deuda" class="text-danger fw-bold"></span>
+        </div>
+        <div id="fijos-area"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-float-container">
+    <button class="btn-float btn-saldo" data-bs-toggle="modal" data-bs-target="#modalSaldo">+</button>
+    <button class="btn-float btn-gasto" data-bs-toggle="modal" data-bs-target="#modalGasto">−</button>
+  </div>
+
+  <div class="modal fade" id="modalGasto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">📉 Registrar Gasto</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="mb-3"><label>Rubro</label><select id="g-rubro" class="form-select"></select></div>
+          <div class="mb-3"><label>Tarjeta Destinada</label><select id="g-tarjeta" class="form-select"></select></div>
+          <div class="mb-3"><label>Monto ($)</label><input type="number" id="g-monto" class="form-control" step="0.01"></div>
+          <div class="mb-3"><label>Descripción</label><input type="text" id="g-desc" class="form-control"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-danger w-100 py-2 fw-bold" onclick="ejecutarGasto()">Guardar Gasto</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalSaldo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title text-success">💰 Actualizar Saldo</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="mb-3"><label>Tarjeta (Destino)</label><select id="s-tarjeta" class="form-select" onchange="filtrarCategoriasSaldo()"></select></div>
+          <div class="mb-3"><label>Categoría</label><select id="s-categoria" class="form-select"></select></div>
+          <div class="mb-3"><label>Saldo Actual ($)</label><input type="number" id="s-monto" class="form-control" step="0.01"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-success w-100 py-2 fw-bold" onclick="ejecutarSaldo()">Actualizar Fila</button></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let saldosReales = [];
+
+    window.onload = () => google.script.run.withSuccessHandler(draw).getData();
+
+    function draw(data) {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('titulo-qna').innerText = data.resumen.qna;
+      document.getElementById('total-deuda').innerText = "Pendiente: $" + data.resumen.debesApartar;
+      
+      let aHtml = "";
+      data.alertas.forEach(a => aHtml += `<div class="alert alert-${a.tipo} py-1 px-3 m-0" style="font-size:0.7rem; border-radius:20px;">⚠️ ${a.msg}</div>`);
+      document.getElementById('alertas').innerHTML = aHtml;
+
+      document.getElementById('flujo-area').innerHTML = renderizar(data.flujoAgrupados, true);
+      document.getElementById('fijos-area').innerHTML = renderizar(data.fijosAgrupados, false);
+
+      // Llenado de Gasto (-)
+      llenarSelect('g-rubro', data.config.rubros);
+      llenarSelect('g-tarjeta', data.config.tarjetas);
+
+      // Llenado de Saldo (+) con filtrado
+      saldosReales = data.config.opcionesSaldos;
+      const tarjetasSaldos = [...new Set(saldosReales.map(s => s.tarjeta))].sort();
+      llenarSelect('s-tarjeta', tarjetasSaldos);
+      filtrarCategoriasSaldo(); 
+    }
+
+    function filtrarCategoriasSaldo() {
+      const tarjetaSel = document.getElementById('s-tarjeta').value;
+      const cats = saldosReales.filter(s => s.tarjeta === tarjetaSel).map(s => s.categoria);
+      llenarSelect('s-categoria', cats);
+    }
+
+    function renderizar(grupos, esFlujo) {
+      let html = "";
+      grupos.forEach(grupo => {
+        html += `<div class="group-header">${grupo.nombreTarjeta}</div>`;
+        grupo.items.forEach(item => {
+          const pagado = item.porcentaje >= 100;
+          if(esFlujo) {
+            html += `<div class="card-flujo"><div class="d-flex justify-content-between"><div><small class="text-muted" style="font-size:0.6rem">${item.categoria}</small><br><span class="fw-bold">${item.nombre}</span></div><div class="text-end"><span class="fw-bold ${item.color==='success'?'text-success':''}">$${item.actual}</span><br><small class="text-muted" style="font-size:0.6rem">Meta: $${item.meta}</small></div></div><div class="progress"><div class="progress-bar bg-${item.color}" style="width: ${item.porcentaje}%"></div></div></div>`;
+          } else {
+            html += `<div class="card-fijo" style="${pagado?'opacity:0.4':''}"><div><div class="fw-bold" style="font-size:0.85rem">${item.nombre} ${pagado?'✅':''}</div><small class="text-muted" style="font-size:0.65rem">${item.categoria}</small></div><button class="btn btn-sm ${pagado?'btn-success':'btn-outline-info'}" onclick="pagarFijo('${item.nombre}', ${item.meta}, '${item.tarjeta}', '${item.categoria}')" ${pagado?'disabled':''}>$${item.meta}</button></div>`;
+          }
+        });
+      });
+      return html;
+    }
+
+    function llenarSelect(id, lista) {
+      document.getElementById(id).innerHTML = lista.map(i => `<option value="${i}">${i}</option>`).join('');
+    }
+
+    function ejecutarGasto() {
+      const d = { rubro: document.getElementById('g-rubro').value, tarjeta: document.getElementById('g-tarjeta').value, monto: document.getElementById('g-monto').value, descripcion: document.getElementById('g-desc').value };
+      if(!d.monto) return alert("Ingresa monto");
+      google.script.run.withSuccessHandler(() => location.reload()).registrarGasto(d);
+    }
+
+    function ejecutarSaldo() {
+      const d = { tarjeta: document.getElementById('s-tarjeta').value, categoria: document.getElementById('s-categoria').value, nuevoSaldo: document.getElementById('s-monto').value };
+      if(!d.nuevoSaldo) return alert("Ingresa saldo");
+      google.script.run.withSuccessHandler(res => res === "OK" ? location.reload() : alert(res)).actualizarSaldoDirecto(d);
+    }
+
+    function pagarFijo(n, m, t, c) {
+      if (confirm(`¿Pagar ${n}?`)) google.script.run.withSuccessHandler(() => location.reload()).registrarPago(n, m, t, c);
+    }
+  </script>
+</body>
+</html>
